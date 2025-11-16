@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPI QR Code Reader & Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .tab-button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .tab-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .tab-button.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .file-upload {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+        }
+
+        .file-upload:hover {
+            background: #f0f2ff;
+            border-color: #764ba2;
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result-box {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .result-box.show {
+            display: block;
+        }
+
+        .qr-display {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .qr-display img {
+            max-width: 300px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .upi-details {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .upi-details h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .detail-value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .success {
+            background: #efe;
+            color: #3c3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .success.show {
+            display: block;
+        }
+
+        .download-btn {
+            background: #28a745;
+            margin-top: 15px;
+        }
+
+        .download-btn:hover {
+            background: #218838;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 UPI QR Code Reader & Generator</h1>
+            <p>Decode, Generate, and Modify UPI Payment QR Codes</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('decode')">🔍 Decode QR</button>
+            <button class="tab-button" onclick="switchTab('generate')">✨ Generate QR</button>
+            <button class="tab-button" onclick="switchTab('modify')">🔧 Modify QR</button>
+        </div>
+
+        <!-- Decode Tab -->
+        <div id="decode-tab" class="tab-content active">
+            <div class="card">
+                <h2>🔍 Decode UPI QR Code</h2>
+                <form id="decode-form">
+                    <div class="file-upload" onclick="document.getElementById('decode-file').click()">
+                        <div class="file-upload-icon">📸</div>
+                        <p><strong>Click to upload</strong> or drag and drop</p>
+                        <p style="color: #999; margin-top: 10px;">PNG, JPG, JPEG, GIF, BMP (Max 16MB)</p>
+                        <input type="file" id="decode-file" accept="image/*">
+                    </div>
+                    <div id="decode-filename" style="margin-top: 10px; color: #667eea; font-weight: 600;"></div>
+                    <button type="submit" class="btn" style="margin-top: 20px; width: 100%;">Decode QR Code</button>
+                </form>
+
+                <div class="loading" id="decode-loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 10px;">Decoding QR code...</p>
+                </div>
+
+                <div class="error" id="decode-error"></div>
+
+                <div class="result-box" id="decode-result">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">Decoded Data</h3>
+                    <div class="upi-details" id="decode-details"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Generate Tab -->
+        <div id="generate-tab" class="tab-content">
+            <div class="card">
+                <h2>✨ Generate UPI QR Code</h2>
+                <form id="generate-form">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="gen-pa">UPI ID / VPA *</label>
+                            <input type="text" id="gen-pa" placeholder="merchant@paytm" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="gen-pn">Payee Name *</label>
+                            <input type="text" id="gen-pn" placeholder="Merchant Name" required>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="gen-am">Amount (₹)</label>
+                            <input type="number" id="gen-am" placeholder="100" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="gen-cu">Currency</label>
+                            <input type="text" id="gen-cu" placeholder="INR" value="INR">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="gen-tn">Transaction Note</label>
+                        <input type="text" id="gen-tn" placeholder="Payment for services">
+                    </div>
+                    <button type="submit" class="btn" style="width: 100%;">Generate QR Code</button>
+                </form>
+
+                <div class="loading" id="generate-loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 10px;">Generating QR code...</p>
+                </div>
+
+                <div class="error" id="generate-error"></div>
+
+                <div class="result-box" id="generate-result">
+                    <div class="qr-display">
+                        <img id="generated-qr" src="" alt="Generated QR Code">
+                        <button class="btn download-btn" id="download-generated" style="width: 100%;">Download QR Code</button>
+                    </div>
+                    <div class="upi-details" style="margin-top: 20px;">
+                        <h3>UPI String</h3>
+                        <p id="generated-upi" style="word-break: break-all; background: #f8f9ff; padding: 10px; border-radius: 5px; margin-top: 10px;"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modify Tab -->
+        <div id="modify-tab" class="tab-content">
+            <div class="card">
+                <h2>🔧 Modify UPI QR Code</h2>
+                <form id="modify-form">
+                    <div class="file-upload" onclick="document.getElementById('modify-file').click()">
+                        <div class="file-upload-icon">📸</div>
+                        <p><strong>Click to upload existing QR code</strong></p>
+                        <p style="color: #999; margin-top: 10px;">PNG, JPG, JPEG, GIF, BMP (Max 16MB)</p>
+                        <input type="file" id="modify-file" name="file" accept="image/*" required>
+                    </div>
+                    <div id="modify-filename" style="margin-top: 10px; color: #667eea; font-weight: 600;"></div>
+
+                    <h3 style="margin-top: 30px; margin-bottom: 15px; color: #667eea;">Modify Parameters (leave blank to keep original)</h3>
+                    
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="mod-pa">UPI ID / VPA</label>
+                            <input type="text" id="mod-pa" name="payee_address" placeholder="New UPI ID">
+                        </div>
+                        <div class="form-group">
+                            <label for="mod-pn">Payee Name</label>
+                            <input type="text" id="mod-pn" name="payee_name" placeholder="New Name">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="mod-am">Amount (₹)</label>
+                            <input type="number" id="mod-am" name="amount" placeholder="New Amount" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="mod-cu">Currency</label>
+                            <input type="text" id="mod-cu" name="currency" placeholder="INR">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="mod-tn">Transaction Note</label>
+                        <input type="text" id="mod-tn" name="transaction_note" placeholder="New Note">
+                    </div>
+                    <button type="submit" class="btn" style="width: 100%;">Modify & Generate</button>
+                </form>
+
+                <div class="loading" id="modify-loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 10px;">Processing...</p>
+                </div>
+
+                <div class="error" id="modify-error"></div>
+
+                <div class="result-box" id="modify-result">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">Modified QR Code</h3>
+                    <div class="qr-display">
+                        <img id="modified-qr" src="" alt="Modified QR Code">
+                        <button class="btn download-btn" id="download-modified" style="width: 100%;">Download QR Code</button>
+                    </div>
+                    <div class="upi-details" style="margin-top: 20px;">
+                        <h3>Updated Parameters</h3>
+                        <div id="modified-details"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+
+            // Reset results
+            hideResults();
+        }
+
+        function hideResults() {
+            document.querySelectorAll('.result-box, .error, .success, .loading').forEach(el => {
+                el.classList.remove('show');
+            });
+        }
+
+        // File upload name display
+        document.getElementById('decode-file').addEventListener('change', function(e) {
+            document.getElementById('decode-filename').textContent = '📎 ' + e.target.files[0].name;
+        });
+
+        document.getElementById('modify-file').addEventListener('change', function(e) {
+            document.getElementById('modify-filename').textContent = '📎 ' + e.target.files[0].name;
+        });
+
+        // Decode Form
+        document.getElementById('decode-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            hideResults();
+            
+            const fileInput = document.getElementById('decode-file');
+            if (!fileInput.files[0]) {
+                showError('decode-error', 'Please select a file');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            document.getElementById('decode-loading').classList.add('show');
+
+            try {
+                const response = await fetch('/decode', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                document.getElementById('decode-loading').classList.remove('show');
+
+                if (!response.ok) {
+                    showError('decode-error', data.error || 'Decoding failed');
+                    return;
+                }
+
+                displayDecodeResult(data);
+            } catch (error) {
+                document.getElementById('decode-loading').classList.remove('show');
+                showError('decode-error', 'Error: ' + error.message);
+            }
+        });
+
+        // Generate Form
+        document.getElementById('generate-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            hideResults();
+
+            const formData = {
+                payee_address: document.getElementById('gen-pa').value,
+                payee_name: document.getElementById('gen-pn').value,
+                amount: document.getElementById('gen-am').value,
+                currency: document.getElementById('gen-cu').value,
+                transaction_note: document.getElementById('gen-tn').value
+            };
+
+            document.getElementById('generate-loading').classList.add('show');
+
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                document.getElementById('generate-loading').classList.remove('show');
+
+                if (!response.ok) {
+                    showError('generate-error', data.error || 'Generation failed');
+                    return;
+                }
+
+                displayGenerateResult(data);
+            } catch (error) {
+                document.getElementById('generate-loading').classList.remove('show');
+                showError('generate-error', 'Error: ' + error.message);
+            }
+        });
+
+        // Modify Form
+        document.getElementById('modify-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            hideResults();
+
+            const formData = new FormData(this);
+
+            document.getElementById('modify-loading').classList.add('show');
+
+            try {
+                const response = await fetch('/modify', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                document.getElementById('modify-loading').classList.remove('show');
+
+                if (!response.ok) {
+                    showError('modify-error', data.error || 'Modification failed');
+                    return;
+                }
+
+                displayModifyResult(data);
+            } catch (error) {
+                document.getElementById('modify-loading').classList.remove('show');
+                showError('modify-error', 'Error: ' + error.message);
+            }
+        });
+
+        function showError(elementId, message) {
+            const errorEl = document.getElementById(elementId);
+            errorEl.textContent = '❌ ' + message;
+            errorEl.classList.add('show');
+        }
+
+        function displayDecodeResult(data) {
+            const resultBox = document.getElementById('decode-result');
+            const detailsDiv = document.getElementById('decode-details');
+            
+            let html = '<div class="detail-row"><div class="detail-label">Raw Data:</div><div class="detail-value" style="word-break: break-all;">' + data.raw_data + '</div></div>';
+            
+            if (data.is_upi && data.upi_data) {
+                html += '<h3 style="color: #667eea; margin: 15px 0;">UPI Payment Details</h3>';
+                for (const [key, value] of Object.entries(data.upi_data)) {
+                    html += `<div class="detail-row"><div class="detail-label">${key}:</div><div class="detail-value">${value}</div></div>`;
+                }
+            }
+            
+            detailsDiv.innerHTML = html;
+            resultBox.classList.add('show');
+        }
+
+        function displayGenerateResult(data) {
+            const resultBox = document.getElementById('generate-result');
+            const qrImg = document.getElementById('generated-qr');
+            const upiText = document.getElementById('generated-upi');
+            const downloadBtn = document.getElementById('download-generated');
+            
+            qrImg.src = 'data:image/png;base64,' + data.image_base64;
+            upiText.textContent = data.upi_string;
+            downloadBtn.onclick = () => window.location.href = data.download_url;
+            
+            resultBox.classList.add('show');
+        }
+
+        function displayModifyResult(data) {
+            const resultBox = document.getElementById('modify-result');
+            const qrImg = document.getElementById('modified-qr');
+            const detailsDiv = document.getElementById('modified-details');
+            const downloadBtn = document.getElementById('download-modified');
+            
+            qrImg.src = 'data:image/png;base64,' + data.image_base64;
+            downloadBtn.onclick = () => window.location.href = data.download_url;
+            
+            let html = '';
+            for (const [key, value] of Object.entries(data.original_data)) {
+                html += `<div class="detail-row"><div class="detail-label">${key}:</div><div class="detail-value">${value}</div></div>`;
+            }
+            
+            detailsDiv.innerHTML = html;
+            resultBox.classList.add('show');
+        }
+    </script>
+</body>
+</html>
